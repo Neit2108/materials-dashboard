@@ -1,0 +1,13 @@
+
+{
+  "appId": "com.thiemlv.hieusuatmaycat",
+  "appName": "Hiệu Suất Máy Cắt",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "http",
+    "cleartext": true,
+    "allowNavigation": [
+      "localhost"
+    ]
+  }
+}
