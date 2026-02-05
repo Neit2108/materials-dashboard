@@ -1,5 +1,5 @@
 
-import XLSX from 'xlsx-js-style';
+import XLSX from 'https://esm.sh/xlsx-js-style@1.2.0';
 import { CuttingRecord } from '../types';
 import { calculateMinutes } from './helpers';
 
@@ -9,10 +9,17 @@ export const exportToExcel = (records: CuttingRecord[], fileName: string, sheetN
     return;
   }
 
-  // 1. Tính toán tổng thời gian máy chạy và công nhân theo ngày/ca làm việc
+  if (!XLSX || !XLSX.utils) {
+    console.error("XLSX library not loaded correctly", XLSX);
+    alert("Lỗi hệ thống: Không thể tải thư viện xuất Excel. Vui lòng thử lại sau.");
+    return;
+  }
+
+  // 1. Tính toán tổng thời gian máy chạy và công nhân theo ngày/ca làm việc (Dùng để hiển thị trong file Excel)
   const machineDailyTotals = new Map<string, number>();
   const operatorDailyTotals = new Map<string, number>();
 
+  // Dùng bản ghi gốc để tính toán tổng chính xác (không phụ thuộc bộ lọc hiện tại của UI)
   records.forEach(r => {
     const mKey = `${r.machineNo}-${r.day}-${r.month}-${r.year}`;
     const oKey = `${r.operator}-${r.day}-${r.month}-${r.year}`;
@@ -50,25 +57,63 @@ export const exportToExcel = (records: CuttingRecord[], fileName: string, sheetN
     ];
   });
 
+  // 4. Tạo dòng Tổng cộng (Summary)
   const totalMarker = records.reduce((s, r) => s + (Number(r.markerLength) || 0), 0);
   const totalPath = records.reduce((s, r) => s + (Number(r.totalPathLength) || 0), 0);
+  const totalBtpMain = records.reduce((s, r) => s + (Number(r.btpMain) || 0), 0);
+  const totalBtpMatching = records.reduce((s, r) => s + (Number(r.btpMatching) || 0), 0);
+  const totalBtpLining = records.reduce((s, r) => s + (Number(r.btpLining) || 0), 0);
 
   const summaryRow = [
     'TỔNG CỘNG:', '', '', '', '', '', '', '',
     Number(totalMarker.toFixed(2)), Number(totalPath.toFixed(2)), '', '',
-    '', '', '', '', '', '', '', '', '', '', '', '', '', ''
+    totalBtpMain, totalBtpMatching, totalBtpLining, '', '', '',
+    '', '', '', '', '', '', '', ''
   ];
 
-  // 4. Khởi tạo Sheet
+  // 5. Khởi tạo Sheet
   const wsData = [headers, ...rows, summaryRow];
   const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-  // 5. Cấu hình độ rộng cột
+  // 6. Định dạng Styling
+  const range = XLSX.utils.decode_range(ws['!ref'] || "A1");
+  const lastRowIdx = wsData.length - 1;
+
+  for (let R = range.s.r; R <= range.e.r; ++R) {
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+      if (!ws[cellAddress]) continue;
+
+      if (R === 0) { // Header
+        ws[cellAddress].s = {
+          fill: { patternType: "solid", fgColor: { rgb: "E2E8F0" } },
+          font: { bold: true, color: { rgb: "1E293B" } },
+          alignment: { horizontal: "center", vertical: "center" },
+          border: {
+            top: { style: "thin" }, bottom: { style: "thin" },
+            left: { style: "thin" }, right: { style: "thin" }
+          }
+        };
+      }
+
+      if (R === lastRowIdx) { // Summary
+        ws[cellAddress].s = {
+          fill: { patternType: "solid", fgColor: { rgb: "FFFF00" } },
+          font: { bold: true },
+          border: { top: { style: "medium" } }
+        };
+      }
+    }
+  }
+
+  // 7. Cấu hình độ rộng cột
   const wscols = headers.map(() => ({ wch: 15 }));
-  wscols[4] = { wch: 25 }; 
+  wscols[4] = { wch: 25 }; // Công nhân
+  wscols[24] = { wch: 22 }; // Tổng TG Máy
+  wscols[25] = { wch: 22 }; // Tổng TG Công nhân
   ws['!cols'] = wscols;
 
-  // 6. Ghi file (Browser/Mobile download)
+  // 8. Ghi file
   try {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, sheetName);
