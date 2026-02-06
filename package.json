@@ -1,0 +1,71 @@
+
+{
+  "name": "hieu-suat-may-cat",
+  "private": true,
+  "version": "1.2.0",
+  "type": "module",
+  "main": "main.cjs",
+  "homepage": "./",
+  "description": "Phần mềm thống kê hiệu suất máy cắt vải công nghiệp tích hợp AI",
+  "author": "ThiemLV",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "electron-dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && electron .\"",
+    "electron-build": "npm run build && electron-builder",
+    "static-build": "vite build --base=./",
+    "cap-init": "npx cap init",
+    "android-add": "npx cap add android",
+    "android-sync": "npm run build && npx cap sync android",
+    "android-open": "npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/cli": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@google/genai": "^1.39.0",
+    "prop-types": "^15.8.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "recharts": "^2.15.0",
+    "xlsx-js-style": "^1.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "concurrently": "^9.2.1",
+    "electron": "^40.1.0",
+    "electron-builder": "^26.7.0",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0",
+    "wait-on": "^9.0.3"
+  },
+  "build": {
+    "appId": "com.thiemlv.hieusuatmaycat",
+    "productName": "Hiệu Suất Máy Cắt Vải",
+    "directories": {
+      "output": "dist_electron"
+    },
+    "files": [
+      "dist/**/*",
+      "main.cjs",
+      "preload.cjs"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "May Cat Vai Thong Ke"
+    }
+  }
+}
