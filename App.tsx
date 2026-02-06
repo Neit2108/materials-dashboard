@@ -5,6 +5,7 @@ import CuttingForm from './components/CuttingForm';
 import StatsCards from './components/StatsCards';
 import PerformanceCharts from './components/PerformanceCharts';
 import FilterBar from './components/FilterBar';
+import AIAnalysis from './components/AIAnalysis';
 import { calculateMinutes, getOperatorSummaries, getMachineSummaries, recordToDate } from './utils/helpers';
 import { exportToExcel, exportByOperator } from './utils/export';
 
@@ -294,73 +295,6 @@ const App: React.FC = () => {
 
         <hr className="border-slate-200" />
 
-        {/* THÙNG RÁC */}
-        {showTrash && (
-          <section className="space-y-6 animate-in slide-in-from-top-4 duration-300">
-            <div className="flex justify-between items-center bg-amber-50 border border-amber-200 p-4 rounded-xl">
-               <div className="flex items-center gap-3">
-                 <div className="p-2 bg-amber-100 text-amber-600 rounded-lg">
-                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                 </div>
-                 <div>
-                   <h3 className="text-sm font-black text-amber-900 uppercase tracking-tight">Dữ liệu trong thùng rác</h3>
-                   <p className="text-xs text-amber-700 font-medium">Bản ghi có thể khôi phục lại danh sách chính.</p>
-                 </div>
-               </div>
-               <div className="flex gap-2">
-                  {deletedRecords.length > 0 && (
-                    <button onClick={clearTrash} className="px-3 py-1 bg-red-600 text-white text-[10px] font-black uppercase rounded-lg hover:bg-red-700 transition-colors">
-                      Xóa sạch
-                    </button>
-                  )}
-                  <button onClick={() => setShowTrash(false)} className="text-amber-900 hover:bg-amber-100 p-2 rounded-lg transition-colors">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                  </button>
-               </div>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
-               <table className="w-full text-left text-sm">
-                 <thead className="bg-slate-50 border-b border-slate-200">
-                   <tr>
-                     <th className="px-6 py-3 text-[10px] font-black text-slate-500 uppercase">Ngày/Máy</th>
-                     <th className="px-6 py-3 text-[10px] font-black text-slate-500 uppercase">Công nhân/Mã hàng</th>
-                     <th className="px-6 py-3 text-[10px] font-black text-slate-500 uppercase text-right">Hành động</th>
-                   </tr>
-                 </thead>
-                 <tbody className="divide-y divide-slate-100">
-                   {deletedRecords.length > 0 ? deletedRecords.map(r => (
-                     <tr key={r.id} className="hover:bg-slate-50 transition-colors">
-                       <td className="px-6 py-4">
-                         <div className="font-bold text-slate-700">{r.day}/{r.month}/{r.year}</div>
-                         <div className="text-[10px] text-slate-400 font-bold uppercase">MÁY {r.machineNo}</div>
-                       </td>
-                       <td className="px-6 py-4">
-                         <div className="font-bold text-slate-900">{r.operator}</div>
-                         <div className="text-[10px] text-indigo-500 font-bold uppercase">{r.productCode}</div>
-                       </td>
-                       <td className="px-6 py-4 text-right">
-                         <div className="flex justify-end gap-2">
-                           <button onClick={() => restoreRecord(r.id)} className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase rounded-lg border border-emerald-100 hover:bg-emerald-600 hover:text-white transition-all shadow-sm">
-                             Khôi phục
-                           </button>
-                           <button onClick={() => permanentDelete(r.id)} className="px-3 py-1 bg-red-50 text-red-600 text-[10px] font-black uppercase rounded-lg border border-red-100 hover:bg-red-600 hover:text-white transition-all shadow-sm">
-                             Xóa vĩnh viễn
-                           </button>
-                         </div>
-                       </td>
-                     </tr>
-                   )) : (
-                     <tr>
-                       <td colSpan={3} className="px-6 py-8 text-center text-slate-400 italic font-medium">Thùng rác trống...</td>
-                     </tr>
-                   )}
-                 </tbody>
-               </table>
-            </div>
-          </section>
-        )}
-
         <section className="space-y-6">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
             <div className="flex flex-col gap-1 border-l-4 border-emerald-500 pl-4">
@@ -378,11 +312,6 @@ const App: React.FC = () => {
                   XUẤT THEO CN: {filterOperator}
                 </button>
               )}
-              {isFiltered && (
-                <button onClick={deleteFilteredRecords} className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 text-red-600 border border-red-200 rounded-xl font-black text-[10px] uppercase tracking-wider hover:bg-red-600 hover:text-white transition-all">
-                  XÓA KQ LỌC
-                </button>
-              )}
             </div>
           </div>
 
@@ -391,6 +320,9 @@ const App: React.FC = () => {
             onDayChange={setFilterDay} onMonthChange={setFilterMonth} onOperatorChange={setFilterOperator} onMachineChange={setFilterMachine} onStartDateChange={setStartDate} onEndDateChange={setEndDate}
             onClear={() => { setFilterDay(''); setFilterMonth(''); setFilterOperator(''); setFilterMachine(''); setStartDate(''); setEndDate(''); }}
           />
+
+          {/* AI ANALYSIS SECTION */}
+          <AIAnalysis operatorSummaries={operatorSummaries} machineSummaries={machineSummaries} />
           
           <StatsCards operatorSummaries={operatorSummaries} machineSummaries={machineSummaries} />
 
@@ -455,7 +387,7 @@ const App: React.FC = () => {
                 </tbody>
               </table>
             </div>
-
+            
             {/* Pagination Controls */}
             {totalPages > 1 && (
               <div className="bg-slate-50 px-6 py-4 flex items-center justify-between border-t border-slate-200">
