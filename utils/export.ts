@@ -9,58 +9,66 @@ export const exportToExcel = (records: CuttingRecord[], fileName: string, sheetN
     return;
   }
 
-  // 1. Tính toán tổng thời gian máy chạy và công nhân theo ngày/ca làm việc
-  const machineDailyTotals = new Map<string, number>();
-  const operatorDailyTotals = new Map<string, number>();
-
-  records.forEach(r => {
-    const mKey = `${r.machineNo}-${r.day}-${r.month}-${r.year}`;
-    const oKey = `${r.operator}-${r.day}-${r.month}-${r.year}`;
-    const mins = calculateMinutes(r.startTime, r.endTime);
-    
-    machineDailyTotals.set(mKey, (machineDailyTotals.get(mKey) || 0) + mins);
-    operatorDailyTotals.set(oKey, (operatorDailyTotals.get(oKey) || 0) + mins);
+  // 1. Sắp xếp dữ liệu theo công nhân và ngày
+  const sortedRecords = [...records].sort((a, b) => {
+    if (a.operator !== b.operator) return a.operator.localeCompare(b.operator);
+    const dateA = new Date(a.year, a.month - 1, a.day).getTime();
+    const dateB = new Date(b.year, b.month - 1, b.day).getTime();
+    return dateA - dateB;
   });
 
   // 2. Chuẩn bị Tiêu đề (Headers)
   const headers = [
-    'Ngày', 'Tháng', 'Năm', 'Máy cắt số', 'Công nhân ĐK', 'STT Bàn cắt', 'Mã hàng', 'Màu', 
-    'Chiều dài sơ đồ (m)', 'Tổng chiều dài đường cắt (m)', 'Số sp/Sơ đồ', 'Số lá vải/Bàn', 
-    'BTP Chính', 'BTP Phối', 'BTP Lót', 'TG Cho vải', 'TG Bắt đầu', 'TG Kết thúc', 
-    'TG chạy bàn (Phút)', 'Số mét cắt/phút', 'TG Thay dao (Phút)', 'TG Sửa máy (Phút)', 
-    'Trạng thái dao Trước', 'Trạng thái dao Sau', 
-    'TỔNG TG MÁY CHẠY/CA (Giờ)', 'TỔNG TG CÔNG NHÂN/CA (Giờ)'
+    'Ngày', 'Tháng', 'Máy cắt số', 'Công nhân ĐK', 'STT Bàn cắt', 'Mã hàng', 'Màu', 
+    'Chiều dài sơ đồ cắt', 'Tổng chiều dài đường cắt', 'Số SP /Sơ đồ cắt', 'Số lá vải / bàn', 
+    'Chủng loại vải', 'Số lớp quy định tối đa', '% số lớp thực tế / số lớp quy định', 
+    'Tổng số lượng BTP', 'Thời gian cắt trên bàn', 'Tổng thời gian máy chạy (phút)', 
+    'Số mét cắt / phút', 'Dao trước', 'Dao sau'
   ];
 
-  // 3. Chuẩn bị Dữ liệu (Rows)
-  const rows = records.map(r => {
-    const runTime = calculateMinutes(r.startTime, r.endTime);
-    const speed = runTime > 0 ? (r.totalPathLength / runTime).toFixed(2) : "0.00";
-    const mKey = `${r.machineNo}-${r.day}-${r.month}-${r.year}`;
-    const oKey = `${r.operator}-${r.day}-${r.month}-${r.year}`;
+  const wsData: any[][] = [headers];
+
+  // 3. Nhóm theo công nhân
+  const operators = Array.from(new Set(sortedRecords.map(r => r.operator)));
+
+  operators.forEach(op => {
+    const opRecords = sortedRecords.filter(r => r.operator === op);
     
-    return [
-      r.day, r.month, r.year, r.machineNo, r.operator, r.tableSeq, r.productCode, r.color,
-      r.markerLength, r.totalPathLength, r.productsPerMarker, r.pliesPerTable,
-      r.btpMain, r.btpMatching, r.btpLining, r.fabricLoadingTime, r.startTime, r.endTime,
-      runTime, speed, r.bladeChangeTime, r.repairTime,
-      r.bladeStatusBefore, r.bladeStatusAfter,
-      Number(((machineDailyTotals.get(mKey) || 0) / 60).toFixed(2)),
-      Number(((operatorDailyTotals.get(oKey) || 0) / 60).toFixed(2))
-    ];
+    // Thêm các dòng dữ liệu của công nhân này
+    opRecords.forEach(r => {
+      const runTime = calculateMinutes(r.startTime, r.endTime);
+      const speed = runTime > 0 ? (r.totalPathLength / runTime).toFixed(2) : "0.00";
+      const efficiency = r.maxPlies > 0 ? ((r.pliesPerTable / r.maxPlies) * 100).toFixed(1) : "0";
+      const totalBtp = (r.btpMain || 0) + (r.btpMatching || 0) + (r.btpLining || 0);
+      
+      wsData.push([
+        r.day, r.month, r.machineNo, r.operator, r.tableSeq, r.productCode, r.color,
+        r.markerLength, r.totalPathLength, r.productsPerMarker, r.pliesPerTable,
+        r.fabricType || '', r.maxPlies || 0, efficiency + '%',
+        totalBtp, `${r.startTime} - ${r.endTime}`, runTime,
+        speed, r.bladeStatusBefore, r.bladeStatusAfter
+      ]);
+    });
+
+    // 4. Tính toán tổng cộng cho công nhân này
+    const totalMarker = opRecords.reduce((s, r) => s + (Number(r.markerLength) || 0), 0);
+    const totalPath = opRecords.reduce((s, r) => s + (Number(r.totalPathLength) || 0), 0);
+    const totalProducts = opRecords.reduce((s, r) => s + (Number(r.productsPerMarker) || 0), 0);
+    const totalPlies = opRecords.reduce((s, r) => s + (Number(r.pliesPerTable) || 0), 0);
+    const totalBtpAll = opRecords.reduce((s, r) => s + (r.btpMain || 0) + (r.btpMatching || 0) + (r.btpLining || 0), 0);
+    const totalRunTime = opRecords.reduce((s, r) => s + calculateMinutes(r.startTime, r.endTime), 0);
+
+    wsData.push([
+      `TỔNG CỘNG (${op}):`, '', '', '', '', '', '',
+      Number(totalMarker.toFixed(2)), Number(totalPath.toFixed(2)), totalProducts, totalPlies,
+      '', '', '', totalBtpAll, '', totalRunTime, '', '', ''
+    ]);
+    
+    // Thêm dòng trống giữa các công nhân
+    wsData.push([]);
   });
 
-  const totalMarker = records.reduce((s, r) => s + (Number(r.markerLength) || 0), 0);
-  const totalPath = records.reduce((s, r) => s + (Number(r.totalPathLength) || 0), 0);
-
-  const summaryRow = [
-    'TỔNG CỘNG:', '', '', '', '', '', '', '',
-    Number(totalMarker.toFixed(2)), Number(totalPath.toFixed(2)), '', '',
-    '', '', '', '', '', '', '', '', '', '', '', '', '', ''
-  ];
-
-  // 4. Khởi tạo Sheet
-  const wsData = [headers, ...rows, summaryRow];
+  // 5. Khởi tạo Sheet
   const ws = XLSX.utils.aoa_to_sheet(wsData);
 
   // 5. Cấu hình độ rộng cột

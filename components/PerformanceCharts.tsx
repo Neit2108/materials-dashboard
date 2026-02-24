@@ -15,7 +15,7 @@ interface Props {
 const PerformanceCharts: React.FC<Props> = ({ operatorSummaries, machineSummaries, records }) => {
   // Chuẩn bị dữ liệu xu hướng theo ngày
   const dailyData = React.useMemo(() => {
-    const map = new Map<string, { date: string, path: number, time: number }>();
+    const map = new Map<string, { date: string, path: number, time: number, plies: number, maxPlies: number }>();
     
     // Sắp xếp records theo thời gian để vẽ line chart đúng
     const sortedRecords = [...records].sort((a, b) => {
@@ -26,8 +26,10 @@ const PerformanceCharts: React.FC<Props> = ({ operatorSummaries, machineSummarie
 
     sortedRecords.forEach(r => {
       const key = `${r.day}/${r.month}`;
-      const existing = map.get(key) || { date: key, path: 0, time: 0 };
+      const existing = map.get(key) || { date: key, path: 0, time: 0, plies: 0, maxPlies: 0 };
       existing.path += (r.totalPathLength || 0);
+      existing.plies += (r.pliesPerTable || 0);
+      existing.maxPlies += (r.maxPlies || 0);
       
       const [h1, m1] = r.startTime.split(':').map(Number);
       const [h2, m2] = r.endTime.split(':').map(Number);
@@ -38,7 +40,10 @@ const PerformanceCharts: React.FC<Props> = ({ operatorSummaries, machineSummarie
       map.set(key, existing);
     });
 
-    return Array.from(map.values());
+    return Array.from(map.values()).map(d => ({
+      ...d,
+      efficiency: d.maxPlies > 0 ? Number(((d.plies / d.maxPlies) * 100).toFixed(1)) : 0
+    }));
   }, [records]);
 
   const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
@@ -139,6 +144,36 @@ const PerformanceCharts: React.FC<Props> = ({ operatorSummaries, machineSummarie
                 dot={{ r: 4, fill: "#f59e0b", strokeWidth: 2, stroke: "#fff" }}
               />
             </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Biểu đồ 4: Hiệu suất lá vải theo ngày */}
+      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm xl:col-span-2">
+        <div className="flex items-center gap-2 mb-6">
+          <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
+          <h3 className="text-sm font-black text-slate-700 uppercase tracking-tight">Xu hướng hiệu suất lá vải (%)</h3>
+        </div>
+        <div className="h-[300px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={dailyData}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+              <XAxis dataKey="date" tick={{fontSize: 10, fontWeight: 700}} />
+              <YAxis domain={[0, 100]} tick={{fontSize: 10, fontWeight: 700}} />
+              <Tooltip 
+                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                formatter={(value: number) => [`${value}%`, 'Hiệu suất']}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="efficiency" 
+                name="Hiệu suất (%)" 
+                stroke="#2563eb" 
+                strokeWidth={4}
+                dot={{ r: 6, fill: "#2563eb", strokeWidth: 2, stroke: "#fff" }}
+                activeDot={{ r: 8 }}
+              />
+            </LineChart>
           </ResponsiveContainer>
         </div>
       </div>

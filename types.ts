@@ -1,6 +1,13 @@
 
+export interface Branch {
+  id: string;
+  name: string;
+  location?: string;
+}
+
 export interface CuttingRecord {
   id: string;
+  branchId: string;
   day: number;
   month: number;
   year: number;
@@ -8,11 +15,13 @@ export interface CuttingRecord {
   operator: string;
   tableSeq: number;
   productCode: string;
+  fabricType: string;
   color: number;
   markerLength: number;
   totalPathLength: number;
   productsPerMarker: number;
   pliesPerTable: number;
+  maxPlies: number;
   btpMain: number;
   btpMatching: number;
   btpLining: number;
@@ -21,8 +30,9 @@ export interface CuttingRecord {
   endTime: string; // HH:mm
   bladeChangeTime: number; // minutes
   repairTime: number; // minutes
-  bladeStatusBefore: string;
-  bladeStatusAfter: string;
+  bladeStatusBefore: number;
+  bladeStatusAfter: number;
+  notes: string;
   timestamp: number;
 }
 
@@ -33,6 +43,11 @@ export interface OperatorSummary {
   totalRunTimeHours: number;
   averageSpeed: number;
   totalRecords: number;
+  totalPlies: number;
+  totalMaxPlies: number;
+  totalMarkerLength: number;
+  totalProducts: number;
+  totalBtp: number;
 }
 
 export interface MachineSummary {
@@ -48,4 +63,6 @@ export interface MachineSummary {
   totalBtpMatching: number;
   totalBtpLining: number;
   tableCount: number;
+  totalPlies: number;
+  totalMaxPlies: number;
 }

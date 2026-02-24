@@ -1,6 +1,6 @@
 {
-  "name": "Phần mềm thống kê hiệu suất máy cắt vải công nghiệp",
-  "description": "Ứng dụng chuyên nghiệp để theo dõi, quản lý và thống kê dữ liệu vận hành máy cắt trong ngành may mặc, hỗ trợ tính toán hiệu suất và thời gian thực tế của công nhân. Phát triển bởi ThiemLV.",
+  "name": "Hệ thống Quản lý Hiệu suất Máy cắt Vải",
+  "description": "Ứng dụng quản lý đa chi nhánh để theo dõi, thống kê dữ liệu vận hành máy cắt vải công nghiệp, tính toán hiệu suất và BTP tự động.",
   "version": "1.2.0",
   "main": "main.cjs",
   "author": "ThiemLV",

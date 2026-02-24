@@ -51,6 +51,12 @@ const StatsCards: React.FC<Props> = ({ operatorSummaries, machineSummaries }) =>
                       <span className="text-amber-600" title="Lót">{m.totalBtpLining}</span>
                     </div>
                   </div>
+                  <div className="flex justify-between items-center text-[10px] font-bold">
+                    <span className="text-slate-400">HIỆU SUẤT LÁ VẢI:</span>
+                    <span className={`font-black ${m.totalMaxPlies > 0 && (m.totalPlies / m.totalMaxPlies) >= 0.9 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                      {m.totalMaxPlies > 0 ? ((m.totalPlies / m.totalMaxPlies) * 100).toFixed(1) : '0'}%
+                    </span>
+                  </div>
                 </div>
                 <p className="text-[9px] text-slate-400 font-medium italic pt-1">{m.tableCount} bàn cắt hoàn tất</p>
               </div>
@@ -79,18 +85,52 @@ const StatsCards: React.FC<Props> = ({ operatorSummaries, machineSummaries }) =>
               </div>
               
               <div className="grid grid-cols-1 gap-4">
-                <div className="space-y-1 p-3 bg-slate-50 rounded-lg">
-                  <span className="text-[10px] text-slate-500 uppercase font-bold tracking-tight">Cá nhân TG chạy thực tế</span>
-                  <p className="text-xl font-black text-blue-600">{s.totalRunTimeHours} giờ</p>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-slate-500 uppercase font-semibold">Tổng mét cắt</span>
-                    <p className="text-lg font-bold text-slate-900">{s.totalPathLength.toLocaleString()}m</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1 p-3 bg-slate-50 rounded-lg">
+                    <span className="text-[10px] text-slate-500 uppercase font-bold tracking-tight">TG chạy máy (phút)</span>
+                    <p className="text-lg font-black text-blue-600">{s.totalRunTimeMinutes}</p>
                   </div>
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-slate-500 uppercase font-semibold">Tốc độ TB</span>
-                    <p className="text-lg font-bold text-slate-900">{s.averageSpeed} m/ph</p>
+                  <div className="space-y-1 p-3 bg-slate-50 rounded-lg">
+                    <span className="text-[10px] text-slate-500 uppercase font-bold tracking-tight">Tốc độ TB (m/ph)</span>
+                    <p className="text-lg font-black text-slate-900">{s.averageSpeed}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 border-t border-slate-100 pt-3">
+                  <div className="flex justify-between items-center text-[10px] font-bold">
+                    <span className="text-slate-400 uppercase">Tổng sơ đồ:</span>
+                    <span className="text-slate-700">{s.totalMarkerLength.toFixed(1)}m</span>
+                  </div>
+                  <div className="flex justify-between items-center text-[10px] font-bold">
+                    <span className="text-slate-400 uppercase">Tổng đường cắt:</span>
+                    <span className="text-indigo-600">{s.totalPathLength.toFixed(1)}m</span>
+                  </div>
+                  <div className="flex justify-between items-center text-[10px] font-bold">
+                    <span className="text-slate-400 uppercase">Tổng số SP:</span>
+                    <span className="text-slate-700">{s.totalProducts}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-[10px] font-bold">
+                    <span className="text-slate-400 uppercase">Tổng lá vải:</span>
+                    <span className="text-slate-700">{s.totalPlies}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-[10px] font-bold col-span-2">
+                    <span className="text-slate-400 uppercase">Tổng BTP / bàn:</span>
+                    <span className="text-emerald-600">{s.totalBtp}</span>
+                  </div>
+                </div>
+
+                <div className="space-y-1 p-3 bg-blue-50 rounded-lg">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-blue-600 uppercase font-bold tracking-tight">Hiệu suất lá vải TB</span>
+                    <span className="text-sm font-black text-blue-900">
+                      {s.totalMaxPlies > 0 ? ((s.totalPlies / s.totalMaxPlies) * 100).toFixed(1) : '0'}%
+                    </span>
+                  </div>
+                  <div className="w-full h-1.5 bg-blue-100 rounded-full mt-1 overflow-hidden">
+                    <div 
+                      className="h-full bg-blue-600 rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(s.totalMaxPlies > 0 ? (s.totalPlies / s.totalMaxPlies) * 100 : 0, 100)}%` }}
+                    ></div>
                   </div>
                 </div>
               </div>

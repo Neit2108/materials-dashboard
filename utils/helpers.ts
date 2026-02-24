@@ -27,11 +27,21 @@ export const getOperatorSummaries = (records: CuttingRecord[]): OperatorSummary[
       totalRunTimeHours: 0,
       averageSpeed: 0,
       totalRecords: 0,
+      totalPlies: 0,
+      totalMaxPlies: 0,
+      totalMarkerLength: 0,
+      totalProducts: 0,
+      totalBtp: 0,
     };
 
     existing.totalPathLength += r.totalPathLength;
     existing.totalRunTimeMinutes += runTime;
     existing.totalRecords += 1;
+    existing.totalPlies += (r.pliesPerTable || 0);
+    existing.totalMaxPlies += (r.maxPlies || 0);
+    existing.totalMarkerLength += (r.markerLength || 0);
+    existing.totalProducts += (r.productsPerMarker || 0);
+    existing.totalBtp += (r.btpMain || 0) + (r.btpMatching || 0) + (r.btpLining || 0);
     
     map.set(r.operator, existing);
   });
@@ -64,7 +74,9 @@ export const getMachineSummaries = (records: CuttingRecord[]): MachineSummary[] 
       totalBtpMain: 0,
       totalBtpMatching: 0,
       totalBtpLining: 0,
-      tableCount: 0
+      tableCount: 0,
+      totalPlies: 0,
+      totalMaxPlies: 0
     };
 
     existing.totalRunTimeMinutes += runTime;
@@ -74,6 +86,8 @@ export const getMachineSummaries = (records: CuttingRecord[]): MachineSummary[] 
     existing.totalBtpMatching += (r.btpMatching || 0);
     existing.totalBtpLining += (r.btpLining || 0);
     existing.tableCount += 1;
+    existing.totalPlies += (r.pliesPerTable || 0);
+    existing.totalMaxPlies += (r.maxPlies || 0);
     
     map.set(key, existing);
   });
